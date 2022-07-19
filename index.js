@@ -24,11 +24,12 @@ function drag(ev) {
     ev.dataTransfer.setData("text", ev.target.innerHTML);
 }
 
-function ifCondChange() {
-    if (ifDrop.options[ifDrop.selectedIndex].text == "NE") {
+function ifCondChange(){
+    var ifDropText = ifDrop.options[ifDrop.selectedIndex].text;
+    if(ifDropText == "GTE" || ifDropText == "LTE" || ifDropText == "GT" || ifDropText == "LT" || ifDropText == "NE" || ifDropText == "EQ"){
         document.getElementById("ifInput1").style.display = "inline";
         document.getElementById("ifInput2").style.display = "inline";
-    } else {
+    }else{
         document.getElementById("ifInput1").style.display = "none";
         document.getElementById("ifInput2").style.display = "none";
     }
