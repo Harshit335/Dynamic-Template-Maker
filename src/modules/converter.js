@@ -63,13 +63,13 @@ const editHelper = async (options, oldTemplate) => {
         }
 
         return oldTemplate;
-        //return await flattenHtml(oldTemplate);
     } catch (error) {
         throw Error(error);
     }
 }
 
 /**
+ * Helper function for handling LOOP and any code inside LOOP 
  * Case 1: HANDLE LOOPS ON LIST OF JSON DATA (Done)
  * Case 2: HANDLE LOOPS ON LIST OF NON-JSON DATA (Done)
  * Case 3: HANDLE NESTED LOOPS (Done but could be improved)
@@ -149,6 +149,7 @@ async function loopHelper(data) {
 }
 
 /**
+ * Helper function for handling IF conversion
  * Case 1: HANDLE IF (Done)
  * Case 2: HANDLE COMPLEX IF CONDITIONS (Done but could be improved)
  * Case 3: HANDLE IF INSIDE LOOP (Done in loopHelper)

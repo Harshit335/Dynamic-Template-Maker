@@ -20,10 +20,16 @@ Handlebars.registerHelper({
     }
 });
 
+/** Regular expression for finding {{ <variables> }} in template */
 const varRegex = RegExp('(?:{{(?<VAR>[.a-zA-Z0-9_\\[\\]\\s\\\'\\"]*)}})', 'g');
+
+/** Regular expression for finding LOOP_START:<variable_name> in template */
 const loopStartRegex = RegExp('(?:LOOP_START:)(?<ATTR>[a-zA-Z0-9_.\\[\\]\\(\\)\\\'\\"]*)', 'g');
+
+/** Regular expression for finding IF:<conditions> in template */
 const ifRegex = RegExp('(?:IF:(?<COND>[a-zA-Z0-9_.\\[\\]\\(\\)\\\'\\"\\s]*))', 'g');
 
+/** Possible characters in IF conditions other than variables */
 const ifConditionOptions = ["AND", "OR", "GTE", "LTE", "GE", "LE", "NE", "EQ", ")", "(", "NULL", "UNDEFINED"];
 
 /**
