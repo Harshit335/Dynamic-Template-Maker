@@ -4,7 +4,7 @@
   "description": "Dynamic Template Maker",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npx http-server --cors"
   },
   "author": "Harshit Jain, Hardik Thami",
   "license": "ISC",
