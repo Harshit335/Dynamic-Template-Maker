@@ -26,6 +26,11 @@ async function replaceHbsVariable(subStringToReplace) {
     var newHbsVariable = subStringToReplace
     var index = newHbsVariable.length
 
+    /**
+     * Searches for longest and right most (starting from left) 
+     * variable that is in scope (or in other words is in loop_map).
+     * Only this needs to be converted, rest remains the same.
+     */
     while (!foundSubString) {
         if (newHbsVariable in loop_map) {
             foundSubString = true
@@ -39,16 +44,18 @@ async function replaceHbsVariable(subStringToReplace) {
         }
     }
 
+    /** If no such variable found return original variable */
     if (!foundSubString) {
         return subStringToReplace;
     }
     
+    /** Convert variable to it's handlebars equivalent */
     var count = loop_map[newHbsVariable]
     var x = "../".repeat(depth - count) // Will raise invalid count value error if depth - count < 0
-    
     newHbsVariable = newHbsVariable.replace(newHbsVariable, x + 'this')
+    newHbsVariable += subStringToReplace.substring(index) // Append the rest of original variable
 
-    return newHbsVariable + subStringToReplace.substring(index)   
+    return newHbsVariable
 }
 
 const editHelper = async (options, oldTemplate) => {
@@ -204,7 +211,13 @@ async function download(filename, textInput) {
 window.convertButton = async function () {
     var editor = ace.edit("editor");
     var oldTemplate = editor.getValue().trim();
-    var options = ['Loop', 'IfElse'];
+
+    /** 
+     * TODO: Optimize here by calling only those helpers that are neccessary.
+     * TODO: Fix their order issue (try reverse order of options)
+    */ 
+    var options = ['Loop', 'IfElse']; 
+
     var newTemplate = await editHelper(options, oldTemplate);
 
     var filename = "output.html";
