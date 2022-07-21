@@ -1,4 +1,4 @@
-import { loopHelper, noneHelper, ifHelper, ifElseHelper } from "../modules/converter.js";
+import { loopHelper, noneHelper, ifElseHelper } from "../modules/converter.js";
 
 /** 
  * Example of handlebars if statement with below mentioned helpers:
@@ -37,8 +37,7 @@ const ifConditionOptions = ["AND", "OR", "GTE", "LTE", "GE", "LE", "NE", "EQ", "
  */
 const templateEditingOptions = { 
     'None': noneHelper, 
-    'Loop': loopHelper,
-    'If': ifHelper, 
+    'Loop': loopHelper, 
     'IfElse': ifElseHelper,
 };
 
