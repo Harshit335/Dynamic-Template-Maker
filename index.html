@@ -34,6 +34,12 @@
         #ifInput2{
             display: none;
         }
+        #input1Drop{
+            display: none;
+        }
+        #input2Drop{
+            display: none;
+        }
     </style>
 </head>
 
@@ -70,6 +76,7 @@
 
     <div>
         <select id="ifCondDrop" onchange="ifCondChange()">
+            <option value="none">Select Operator</option>
             <option value="AND">AND</option>
             <option value="OR">OR</option>
             <option value="GTE">GTE</option>
@@ -78,13 +85,22 @@
             <option value="LT">LT</option>
             <option value="NE">NE</option>
             <option value="EQ">EQ</option>
+        </select><br>
+        <select id="input1Drop" onchange="ifInputDropChange(input1Drop)">
+            <option value="VAR">VAR</option>
+            <option value="CONST">CONSTANT</option>
         </select>
-        <input id="ifInput1" value="" onchange="ifInputChange()"></input>
+        <input id="ifInput1" value="" onchange="ifInputChange()"></input><br>
+        <select id="input2Drop" onchange="ifInputDropChange(input2Drop)">
+            <option value="VAR">VAR</option>
+            <option value="CONST">CONSTANT</option>
+        </select>
         <input id="ifInput2" value="" onchange="ifInputChange()"></input>
         <!-- <button type="button" id="ifButton" onclick="ifButtonClick()" style="display: none;">Apply If</button> -->
         <div class="drag">
             <span draggable=true id="ifStart" ondragstart="drag(event)">IF: </span>
             <span draggable=true id="ifEnd" ondragstart="drag(event)">IF_END</span>
+            <span draggable=true id="else" ondragstart="drag(event)">ELSE</span>
         </div>
     </div>
 
