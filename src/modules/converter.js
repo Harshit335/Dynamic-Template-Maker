@@ -8,9 +8,15 @@ var depth = -1;
 
 /**
  * Array implementation of a stack to keep track of loops as we encounter them
- * Also helps in finding out any syntax error in template (Balanced Paranthesis Problem)
+ * Also helps in finding out any syntax error in template due to loop (Balanced Paranthesis Problem)
  */
-var loop_stack = [];
+var loop_stack;
+
+/**
+ * Array implementation of a stack to keep track of if as we encounter them
+ * Also helps in finding out any syntax error in template due to if (Balanced Paranthesis Problem)
+ */
+var if_stack;
 
 /**
  * Map between loop and their own depth's
@@ -71,7 +77,7 @@ const editHelper = async (options, oldTemplate) => {
 
         return oldTemplate;
     } catch (error) {
-        throw Error(error);
+        throw error;
     }
 }
 
@@ -82,8 +88,11 @@ const editHelper = async (options, oldTemplate) => {
  * Case 3: HANDLE NESTED LOOPS (Done but could be improved)
  */
 async function loopHelper(data) {
+    loop_stack = [];    
+
     try {
         const hbsLoopEnd = '{{/each}}';
+
         data = data.replace(/LOOP_END/g, hbsLoopEnd);
         data = data.split("\n");
 
@@ -96,7 +105,7 @@ async function loopHelper(data) {
                 var attr = (result.groups.ATTR).trim()
                 loop_stack.push(attr)
 
-                /** Converting loop */
+                /** Converting LOOP_START */
                 const hbsLoopStart = `{{#each ${await replaceHbsVariable(attr)}}}`
                 line = line.replace(result[0], hbsLoopStart)
                 
@@ -104,18 +113,38 @@ async function loopHelper(data) {
                 foundLoop = true
             }
 
-            /** Converting variables in if condition */
+            /** Converting variables in IF condition */
             result = line.matchAll(ifRegex)
             for (const match of result) {
                 var condition = (match.groups.COND).trim()
 
+                /** 
+                 * TODO: Handle possible syntax error in IF condition
+                 * Check for type of brackets (only "(" and ")" allowed), their order (Balanced Paranthesis Problem) 
+                 * and whether they adhere to following format --> (Operator variable variable) // This returns a boolean 
+                 * value which itself is a variable (hence allowing nesting of condition)
+                 * For eg.
+                 * IF:(NE members NULL)
+                 * IF:(NE members[0].pan "1A")
+                 * IF:(AND (NE members NULL) (NE members.length 0))
+                */  
                 condition = condition.replace(/\)/g, "")
                 condition = condition.replace(/\(/g, "")
                 condition = condition.split(/\s+/g)
 
                 for (const element of condition) {
                     var temp = element.trim()
-                    if (!ifConditionOptions.includes(temp) && temp !== '') { 
+
+                    /** Skip constants (like string and numbers) */
+                    if ( 
+                        temp === '' ||
+                        (temp[0] == '\"' && temp[temp.length - 1] == '\"') || 
+                        ((temp[0] == "\'" && temp[temp.length - 1] == "\'")) ||
+                        (!isNaN(temp))
+                    ) { continue }
+
+                    if (!ifConditionOptions.includes(temp)) {
+                        console.log(temp)
                         line = line.replace(temp, await replaceHbsVariable(temp))
                     }
                 }
@@ -151,47 +180,69 @@ async function loopHelper(data) {
 
         return data.join("\n");
     } catch (error) {
-        throw Error(error);
+        throw error;
     }
 }
 
 /**
- * Helper function for handling IF conversion
+ * Helper function for handling IF and ELSE conversion
  * Case 1: HANDLE IF (Done)
  * Case 2: HANDLE COMPLEX IF CONDITIONS (Done but could be improved)
  * Case 3: HANDLE IF INSIDE LOOP (Done in loopHelper)
  * Case 4: HANDLE ELSE IF // {{else if ... }} (Not neccessary)
  */
-async function ifHelper(data) {
+async function ifElseHelper(data) {
+    if_stack = []; 
+
     try {
         const hbsIfEnd = '{{/if}}';
-        data = data.replace(/IF_END/g, hbsIfEnd)
+        const hbsElse = '{{else}}';
 
-        do {
-            var result = ifRegex.exec(data);
-            
+        data = data.replace(/ELSE/g, hbsElse);
+        data = data.replace(/IF_END/g, hbsIfEnd);
+        data = data.split("\n");
+
+        for (let i = 0; i < data.length; i++) {
+            var line = data[i]
+            var result = ifRegex.exec(line);
+
             if (result) {
+                if_stack.push("IF")
+
+                /** Converting IF */
                 var condition = (result.groups.COND).trim()
                 const hbsIfStart = `{{#if ${condition}}}`
-                data = data.replace(result[0], hbsIfStart)
+                line = line.replace(result[0], hbsIfStart)
             }
-        } while (result);
+
+            /** Checking for syntax error due to else */
+            const elseRegex = RegExp(hbsElse, 'g');
+            if (elseRegex.exec(line)) {
+                if (if_stack.length === 0) {
+                    throw Error("Syntax Error In Template")
+                }
+            }
+
+            /** Check if reached if end */
+            const ifEndRegex = RegExp(hbsIfEnd, 'g');
+            if (ifEndRegex.exec(line)) {
+                if (if_stack.length !== 0) {
+                    if_stack.pop()
+                } else {
+                    throw Error("Syntax Error In Template")
+                }
+            }
+
+            data[i] = line;
+        }
+
+        if (if_stack.length !== 0) {
+            throw Error("Syntax Error In Template")
+        }
         
-        return data;
+        return data.join("\n");
     } catch (error) {
-        throw Error(error);
-    }
-}
-
-async function ifElseHelper(data) {
-    try {
-        data = await ifHelper(data)
-        const hbsElse = '{{else}}';
-        data = data.replace(/ELSE/g, hbsElse)
-
-        return data;
-    } catch (error) {
-        throw Error(error);
+        throw error;
     }
 }
 
@@ -216,13 +267,13 @@ window.convertButton = async function () {
      * TODO: Optimize here by calling only those helpers that are neccessary.
      * TODO: Fix their order issue (try reverse order of options)
     */ 
-    var options = ['Loop', 'IfElse']; 
+    var optionsUsed = ['Loop', 'IfElse']; 
 
-    var newTemplate = await editHelper(options, oldTemplate);
+    var newTemplate = await editHelper(optionsUsed, oldTemplate);
 
     var filename = "output.html";
     await download(filename, newTemplate);
 }
 
 
-export { editHelper, noneHelper, loopHelper, ifHelper, ifElseHelper };
+export { editHelper, noneHelper, loopHelper, ifElseHelper };
