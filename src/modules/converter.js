@@ -8,13 +8,13 @@ var depth = -1;
 
 /**
  * Array implementation of a stack to keep track of loops as we encounter them
- * Also helps in finding out any syntax error in template (Balanced Paranthesis Problem)
+ * Also helps in finding out any syntax error in template due to loop (Balanced Paranthesis Problem)
  */
 var loop_stack;
 
 /**
  * Array implementation of a stack to keep track of if as we encounter them
- * Also helps in finding out any syntax error in template (Balanced Paranthesis Problem)
+ * Also helps in finding out any syntax error in template due to if (Balanced Paranthesis Problem)
  */
 var if_stack;
 
@@ -118,13 +118,33 @@ async function loopHelper(data) {
             for (const match of result) {
                 var condition = (match.groups.COND).trim()
 
+                /** 
+                 * TODO: Handle possible syntax error in IF condition
+                 * Check for type of brackets (only "(" and ")" allowed), their order (Balanced Paranthesis Problem) 
+                 * and whether they adhere to following format --> (Operator variable variable) // This returns a boolean 
+                 * value which itself is a variable (hence allowing nesting of condition)
+                 * For eg.
+                 * IF:(NE members NULL)
+                 * IF:(NE members[0].pan "1A")
+                 * IF:(AND (NE members NULL) (NE members.length 0))
+                */  
                 condition = condition.replace(/\)/g, "")
                 condition = condition.replace(/\(/g, "")
                 condition = condition.split(/\s+/g)
 
                 for (const element of condition) {
                     var temp = element.trim()
-                    if (!ifConditionOptions.includes(temp) && temp !== '') { 
+
+                    /** Skip constants (like string and numbers) */
+                    if ( 
+                        temp === '' ||
+                        (temp[0] == '\"' && temp[temp.length - 1] == '\"') || 
+                        ((temp[0] == "\'" && temp[temp.length - 1] == "\'")) ||
+                        (!isNaN(temp))
+                    ) { continue }
+
+                    if (!ifConditionOptions.includes(temp)) {
+                        console.log(temp)
                         line = line.replace(temp, await replaceHbsVariable(temp))
                     }
                 }
@@ -248,7 +268,7 @@ window.convertButton = async function () {
      * TODO: Fix their order issue (try reverse order of options)
     */ 
     var optionsUsed = ['Loop', 'IfElse']; 
-    
+
     var newTemplate = await editHelper(optionsUsed, oldTemplate);
 
     var filename = "output.html";
