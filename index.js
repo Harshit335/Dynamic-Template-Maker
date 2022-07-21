@@ -26,7 +26,10 @@ function drag(ev) {
 
 function ifCondChange(){
     var ifDropText = ifDrop.options[ifDrop.selectedIndex].text;
-    if(ifDropText == "GTE" || ifDropText == "LTE" || ifDropText == "GT" || ifDropText == "LT" || ifDropText == "NE" || ifDropText == "EQ"){
+    //Todo: And and OR can have more than 2 inputs
+    if(ifDropText == "GTE" || ifDropText == "LTE" || ifDropText == "GT" || ifDropText == "LT" || ifDropText == "NE" || ifDropText == "EQ" || ifDropText == "AND" || ifDropText == "OR"){
+        document.getElementById("input1Drop").style.display = "inline";
+        document.getElementById("input2Drop").style.display = "inline";
         document.getElementById("ifInput1").style.display = "inline";
         document.getElementById("ifInput2").style.display = "inline";
     }else{
@@ -35,12 +38,38 @@ function ifCondChange(){
     }
 }
 
+function ifInputDropChange(inputDrop){
+    if(String(inputDrop.value) === "VAR"){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 function ifInputChange() {
     var inputVal1 = document.getElementById("ifInput1").value;
     var inputVal2 = document.getElementById("ifInput2").value;
     var ifStartSpan = document.getElementById("ifStart");
     var ifEndSpan = document.getElementById("ifEnd");
+
+    if(ifInputDropChange(input1Drop) === false){
+        if(isNaN(inputVal1)){
+            inputVal1 = '"' + inputVal1 + '"';
+        }
+    }
+
+    if(ifInputDropChange(input2Drop) === false){
+        if(isNaN(inputVal2)){
+            inputVal2 = '"' + inputVal2 + '"';
+        }
+    }
+
     ifStartSpan.innerHTML = "IF:("+ ifDrop.options[ifDrop.selectedIndex].text + " " + inputVal1 + " " + inputVal2 + ")";
+    // if(isNaN(inputVal2)){
+    //     ifStartSpan.innerHTML = "IF:("+ ifDrop.options[ifDrop.selectedIndex].text + " " + inputVal1 + " " + '"' + inputVal2 + '"' + ")";
+    // }else{
+    //     ifStartSpan.innerHTML = "IF:("+ ifDrop.options[ifDrop.selectedIndex].text + " " + inputVal1 + " " + inputVal2 + ")";
+    // }
 }
 
 function updateValue() {
